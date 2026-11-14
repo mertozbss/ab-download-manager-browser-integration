@@ -212,10 +212,15 @@ export function updatePopup(items: DownloadableMedia[]) {
             item.extension,
         ].filter(Boolean).join(" · ")
 
-        el.innerHTML = `
-          <div class="abdm-item-title">${title}</div>
-          <div class="abdm-item-details">${details}</div>
-        `
+        // SECURITY: title/details come from network data (Content-Disposition,
+        // URL file name, page title) and must never be parsed as HTML.
+        const titleEl = document.createElement("div")
+        titleEl.className = "abdm-item-title"
+        titleEl.textContent = title
+        const detailsEl = document.createElement("div")
+        detailsEl.className = "abdm-item-details"
+        detailsEl.textContent = details
+        el.append(titleEl, detailsEl)
 
         el.onclick = () => {
             onItemClick?.(item)

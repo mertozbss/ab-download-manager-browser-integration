@@ -1,0 +1,72 @@
+name: Build & security check (mertozbss)
+
+# - Elle çalıştırma veya master'a push -> testler + Chrome/Firefox zip (artifact)
+# - vX.Y.Z tag'i push edilince -> bu fork'ta Release oluşturur
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install (lockfile birebir)
+        run: npm ci --no-fund
+
+      - name: Çalışma zamanı bağımlılık denetimi (high ve üstü -> fail)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: XSS testi (zararlı medya dosya adı sayfaya HTML olarak girmemeli)
+        run: |
+          npm i --no-save --no-fund --no-audit jsdom@26 esbuild@0.25
+          node tests/security/xss-test.mjs .
+
+      - name: Build
+        run: npm run build
+
+      - name: Derlenmiş kodda eval / uzak kod kontrolü
+        run: |
+          if grep -rlE '\beval\(|new Function\(' dist --include=*.js; then
+            echo "::error::Derlenmiş eklentide eval/new Function bulundu"; exit 1
+          fi
+          echo "Derlenmiş JS içindeki dış adresler (sadece yorum/lisans olmalı):"
+          grep -rhoE 'https?://[a-zA-Z0-9.-]+\.[a-z]{2,}' dist --include=*.js | sort | uniq -c | sort -rn
+
+      - name: Zip + SHA256
+        run: |
+          V=$(node -p "require('./package.json').version")
+          mkdir -p out
+          (cd dist/chrome && zip -qr ../../out/abdm-extension-chrome-$V.zip .)
+          (cd dist/firefox && zip -qr ../../out/abdm-extension-firefox-$V.zip .)
+          cd out && sha256sum * | tee SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: abdm-extension
+          path: out
+
+      - name: Release (sadece tag push'ta)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          make_latest: true
+          files: out/*
+          body: |
+            mertozbss güvenlik yamalı derleme.
+            - Medya seçim popup'ında XSS düzeltmesi (sunucudan gelen dosya adı HTML olarak işlenmiyor)
+            - Çalışma zamanı bağımlılıkları güncellendi (lodash, zod) — npm audit temiz
+            Chrome/Edge: zip'i bir klasöre aç → chrome://extensions → Geliştirici modu → "Paketlenmemiş öğe yükle"
