@@ -172,5 +172,14 @@
   },
   "config_bypass_shortcut_description": {
     "message": "When auto-capture of download links is enabled, holding down the shortcut key and clicking on the download link uses the internal browser download method."
+  },
+  "config_youtube_button": {
+    "message": "Show YouTube download button"
+  },
+  "config_youtube_button_description": {
+    "message": "Show a \"Download this video\" button on the YouTube player. AB Download Manager always asks for the quality, even when \"Add downloads silently\" is on."
+  },
+  "youtube_download_button": {
+    "message": "Download this video"
   }
 }
