@@ -3,7 +3,7 @@ import * as backend from "~/backend/Backend"
 import * as Backend from "~/backend/Backend"
 import {redirectDownloadLinksToMe} from "~/linkgrabber/LinkGrabber";
 import {onMessage} from "webext-bridge/background";
-import {addDownload, getHeadersForUrls} from "~/background/actions";
+import {addDownload, addYtDlpDownload, getHeadersForUrls} from "~/background/actions";
 import {keepListeningToEvents} from "~/utils/extension-api";
 import {IS_MV3} from "~/utils/ManifestUtil";
 import {setHoldingKey} from "~/background/BackgroundSharedState";
@@ -15,6 +15,9 @@ import BackgroundEntryType from "~/utils/EntryPointTypes/background/BackgroundEn
 function receiveMessageFromContentScripts() {
     onMessage(DefinedCommands.ADD_DOWNLOAD, async (msg) => {
         return await addDownload(msg.data)
+    })
+    onMessage(DefinedCommands.ADD_YTDLP_DOWNLOAD, async (msg) => {
+        return await addYtDlpDownload(msg.data)
     })
     onMessage(DefinedCommands.TEST_HTTP_PORT, async (msg) => {
         return await backend.httpPing(msg.data)

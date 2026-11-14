@@ -108,6 +108,9 @@ class ToolsViewModel extends EventAwareViewModel<ToolsViewModelEvent> implements
     @observable
     bypassShortcut!: string
 
+    @observable
+    youtubeButtonEnabled!: boolean
+
     setAutoCaptureLinks(value: boolean) {
         Configs.setConfigItem("autoCaptureLinks", value)
     }
@@ -154,6 +157,10 @@ class ToolsViewModel extends EventAwareViewModel<ToolsViewModelEvent> implements
 
     setSendHeaders(value: boolean) {
         Configs.setConfigItem("sendHeaders", value)
+    }
+
+    setYoutubeButtonEnabled(value: boolean) {
+        Configs.setConfigItem("youtubeButtonEnabled", value)
     }
 
     @observable
@@ -284,6 +291,8 @@ const SettingsSection: React.FC<{ vm: ToolsViewModel }> = observer((props) => {
             <Divider/>
             <ContextMenuEnabledSection value={vm.contextMenuEnabled} toggle={(v) => vm.setContextMenuEnabled(v)}/>
             <Divider/>
+            <YoutubeButtonSection value={vm.youtubeButtonEnabled} toggle={(v) => vm.setYoutubeButtonEnabled(v)}/>
+            <Divider/>
             <SilentDownloadSection
                 silentAddEnabled={vm.silentAddDownload}
                 setSilentAddEnabled={(v) => vm.setSilentAddDownload(v)}
@@ -378,6 +387,26 @@ function ContextMenuEnabledSection(
         }
         description={
             <div>{browser.i18n.getMessage("config_context_menu_description")}</div>
+        }
+    />
+}
+
+function YoutubeButtonSection(
+    props: {
+        value: boolean,
+        toggle: (v: boolean) => void
+    }
+) {
+    return <OptionItem
+        title={
+            <div>{browser.i18n.getMessage("config_youtube_button")}</div>
+        }
+        toggle={
+            <input checked={props.value} onChange={event => props.toggle(event.target.checked)} type="checkbox"
+                   className="checkbox"/>
+        }
+        description={
+            <div>{browser.i18n.getMessage("config_youtube_button_description")}</div>
         }
     />
 }

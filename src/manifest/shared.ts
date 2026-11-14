@@ -20,6 +20,10 @@ export function getBaseManifest() {
         content_scripts: [{
             matches: ["*://*/*"],
             js: ["src/entrypoint/ContentScript.ts"],
+        }, {
+            // "download this video" button on the YouTube player (covered by the existing host permissions)
+            matches: ["*://*.youtube.com/*", "*://youtu.be/*"],
+            js: ["src/entrypoint/YouTubeContentScript.ts"],
         }],
         options_ui: {
             page: "src/entrypoint/OptionUi/index.html",

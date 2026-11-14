@@ -1,0 +1,11 @@
+{
+  "config_youtube_button": {
+    "message": "YouTube indirme butonunu göster"
+  },
+  "config_youtube_button_description": {
+    "message": "YouTube oynatıcısının üstünde \"Bu videoyu indir\" butonu gösterir. \"Add downloads silently\" açık olsa bile AB Download Manager her zaman kaliteyi sorar."
+  },
+  "youtube_download_button": {
+    "message": "Bu videoyu indir"
+  }
+}

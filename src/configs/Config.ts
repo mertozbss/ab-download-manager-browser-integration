@@ -92,6 +92,8 @@ const ConfigType = z.object({
         return "Delete"
     }),
     apiKey: z.string().catch(""),
+    // show the "download this video" button on YouTube video pages
+    youtubeButtonEnabled: z.boolean().catch(true),
 })
 
 export type Config = z.infer<typeof ConfigType>
