@@ -20,7 +20,10 @@
     "pack:chrome": "npm run build:chrome && web-ext build --source-dir ./dist/chrome --artifacts-dir ./dist --filename chrome.zip",
     "pack": "npm run pack:chrome && npm run pack:firefox && npm run pack:src",
     "serve:firefox": "web-ext run --firefox-profile default-release --start-url \"about:debugging#/runtime/this-firefox\"  --source-dir ./dist/firefox --devtools",
-    "serve:chrome": "web-ext run -t chromium --start-url \"https://example.com\" --source-dir ./dist/chrome"
+    "serve:chrome": "web-ext run -t chromium --start-url \"https://example.com\" --source-dir ./dist/chrome",
+    "test": "npm run test:security && npm run test:youtube",
+    "test:security": "node tests/security/xss-test.mjs . && node tests/security/youtube-button-xss-test.mjs .",
+    "test:youtube": "node tests/youtube/url-normalizer-test.mjs ."
   },
   "devDependencies": {
     "@samrum/vite-plugin-web-extension": "^5.1.1",

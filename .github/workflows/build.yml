@@ -2,6 +2,7 @@ name: Build & security check (mertozbss)
 
 # - Elle çalıştırma veya master'a push -> testler + Chrome/Firefox zip (artifact)
 # - vX.Y.Z tag'i push edilince -> bu fork'ta Release oluşturur
+# - master'a açılan PR -> testler + build (Release adımı çalışmaz)
 
 on:
   workflow_dispatch:
@@ -9,6 +10,8 @@ on:
     branches: [master]
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+*"
+  pull_request:
+    branches: [master]
 
 permissions:
   contents: write
@@ -35,6 +38,12 @@ jobs:
           npm i --no-save --no-fund --no-audit jsdom@26 esbuild@0.25
           node tests/security/xss-test.mjs .
 
+      - name: XSS testi (YouTube butonu - zararlı video başlığı HTML olarak girmemeli)
+        run: node tests/security/youtube-button-xss-test.mjs .
+
+      - name: YouTube URL normalizer testleri
+        run: node tests/youtube/url-normalizer-test.mjs .
+
       - name: Build
         run: npm run build
 
@@ -60,7 +69,7 @@ jobs:
           path: out
 
       - name: Release (sadece tag push'ta)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           make_latest: true
