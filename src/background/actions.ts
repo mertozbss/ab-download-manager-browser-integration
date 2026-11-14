@@ -6,20 +6,54 @@ import browser from "webextension-polyfill";
 import {defaultDownloadRequestOptions, DownloadRequestOptions} from "~/interfaces/DownloadRequestOptions";
 import {getLatestConfig} from "~/configs/Config";
 import {run} from "~/utils/ScopeFunctions";
+import {
+    createYtDlpDownloadRequestItem,
+    YTDLP_DOWNLOAD_REQUEST_OPTIONS,
+    YtDlpDownloadRequest
+} from "~/youtube/YtDlpDownload";
+
+/**
+ * "ytdlp" items are re-validated here (whatever context they came from):
+ * the link is normalized again and invalid ones are dropped.
+ */
+function sanitizeDownloadItems(data: DownloadRequestItem[]): DownloadRequestItem[] {
+    const result: DownloadRequestItem[] = []
+    for (const item of data) {
+        if (item.type === "ytdlp") {
+            const ytDlpItem = createYtDlpDownloadRequestItem(item.link, item.title)
+            if (ytDlpItem === null) {
+                console.log("ignoring an invalid ytdlp download item")
+                continue
+            }
+            result.push(ytDlpItem)
+        } else {
+            result.push(item)
+        }
+    }
+    return result
+}
 
 export async function addDownload(
-    data: DownloadRequestItem[],
+    rawData: DownloadRequestItem[],
 ) {
+    const data = sanitizeDownloadItems(rawData)
+    if (data.length === 0 && rawData.length > 0) {
+        // every item was rejected by sanitizeDownloadItems
+        return false
+    }
     const config = getLatestConfig()
-    const options: DownloadRequestOptions = {...defaultDownloadRequestOptions}
-    if (config.silentAddDownload) {
+    let options: DownloadRequestOptions = {...defaultDownloadRequestOptions}
+    if (data.some(item => item.type === "ytdlp")) {
+        // YouTube downloads must always show the app's quality window
+        options = {...YTDLP_DOWNLOAD_REQUEST_OPTIONS}
+    } else if (config.silentAddDownload) {
         options.silentAdd = true
         options.silentStart = config.silentStartDownload
     }
     const response = !!await usingBackend(async () => {
         return await backend.addDownload(data, options)
     });
-    if (response && config.silentAddDownload && data.length == 1) {
+    if (response && options.silentAdd && data.length == 1) {
         run(() => {
             try {
                 browser.notifications?.create({
@@ -34,6 +68,21 @@ export async function addDownload(
         })
     }
     return response
+}
+
+/**
+ * Request coming from the YouTube content script.
+ * Never attaches headers / cookies; the app only gets the normalized page URL.
+ */
+export async function addYtDlpDownload(
+    request: YtDlpDownloadRequest,
+) {
+    const item = createYtDlpDownloadRequestItem(request?.link, request?.title)
+    if (item === null) {
+        console.log("ignoring an invalid YouTube download request")
+        return false
+    }
+    return await addDownload([item])
 }
 
 export async function getHeadersForUrls(urls: string[]) {

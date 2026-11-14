@@ -4,6 +4,7 @@ import { ProtocolWithReturn } from "webext-bridge";
 import {DownloadRequestHeaders, DownloadRequestItem} from "~/interfaces/DownloadRequestItem";
 import {DownloadableMedia} from "~/media/MediaOnTab";
 import type {Runtime} from "webextension-polyfill";
+import type {YtDlpDownloadRequest} from "~/youtube/YtDlpDownload";
 
 declare module "webext-bridge" {
     export interface ProtocolMap {
@@ -18,5 +19,6 @@ declare module "webext-bridge" {
         get_headers:ProtocolWithReturn<string[],(DownloadRequestHeaders | null)[]>;
         set_holding_key: string;
         get_platform: ProtocolWithReturn<undefined, Runtime.PlatformInfo>,
+        add_ytdlp_download: ProtocolWithReturn<YtDlpDownloadRequest, boolean>,
     }
 }
